@@ -1,0 +1,10 @@
+# Blueprint Update — Day 2 Addendum
+
+**Change to Day 4 (Claude API Integration):**
+Testing tasks now reference the exact JSON contract defined in `docs/API.md`
+(fields: specialist, possibleCondition, isEmergency, emergencyMessage,
+disclaimer) instead of a loose "test 5 inputs" description. No scope change —
+this only removes ambiguity for Day 4's fresh AI conversation.
+
+No other changes to the Day 2–10 blueprint were needed. Tech stack, scope,
+and daily milestones from Day 1 remain fully valid and unchanged.

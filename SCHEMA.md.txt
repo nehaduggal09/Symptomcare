@@ -1,0 +1,62 @@
+# SymptomCare — Data / Schema Design
+
+## Decision: No Database in v1.0
+
+SymptomCare v1.0 does not use a database. This is a deliberate design
+decision, validated against every user story in the PRD:
+
+| PRD User Story | Requires persistent storage? | Reasoning |
+|---|---|---|
+| User describes symptoms and gets a specialist suggestion | No | Stateless request/response — nothing needs to be saved |
+| User sees an emergency warning | No | Computed fresh on every request from the current input |
+| User searches nearby clinics by city | No | Fetched live from Google Places on each request |
+| User has an account / login | Out of scope | Explicitly excluded from v1.0 (see PRD Section 5.2) |
+| User books an appointment | Out of scope | Explicitly excluded from v1.0 |
+| User saves chat history | Out of scope | Explicitly excluded from v1.0 |
+| User rates/reviews a doctor | Out of scope | Explicitly excluded from v1.0 |
+
+Because none of the in-scope v1.0 features require remembering anything
+between requests, adding a database (Postgres, MongoDB, Firebase, etc.)
+would introduce unnecessary setup complexity, hosting cost, and failure
+points for a beginner working 1–2 hours/day — with zero functional
+benefit to v1.0.
+
+## The One Static Data File
+
+The only structured data the app needs is a small list of supported
+cities for the dropdown/selector. This is NOT a database — it is a
+static JSON file bundled with the code.
+
+`data/cities.json`
+```json
+[
+  { "name": "Delhi" },
+  { "name": "Mumbai" },
+  { "name": "Bengaluru" },
+  { "name": "Chennai" },
+  { "name": "Kolkata" },
+  { "name": "Hyderabad" },
+  { "name": "Pune" },
+  { "name": "Ahmedabad" }
+]
+```
+
+This file has no relationships, no constraints, and requires no
+migrations — it is simply read by the frontend to populate the city
+selector. Users may also be allowed to type a custom city name; the
+`nearby-clinics` endpoint will accept any string.
+
+## Future Scope Trigger
+
+If any of the following Future Scope items are ever implemented, that is
+the point at which a real database should be introduced:
+
+- User accounts/login → needs a `users` table/collection
+- Saved chat history → needs a `symptom_checks` table linked to `users`
+- Appointment booking → needs `clinics` and `appointments` tables
+- Doctor reviews/ratings → needs a `reviews` table linked to `users` and
+  `clinics`
+
+Recommended future stack (not built now): a managed free-tier database
+such as a serverless Postgres provider, added only when one of the above
+features is actually scheduled for implementation.

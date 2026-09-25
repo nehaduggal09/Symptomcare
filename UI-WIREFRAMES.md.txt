@@ -1,0 +1,94 @@
+# SymptomCare — UI & User Flow
+
+## 1. User Flow (Single-Page App)
+
+1. User lands on the homepage.
+2. User types symptoms into a textarea (Hindi or English).
+3. User clicks "Check symptoms".
+4. App shows a loading state while calling `/api/analyze-symptoms`.
+5. Branch:
+   - If emergency → emergency warning banner appears prominently.
+   - If not → specialist + possible condition + disclaimer appear.
+6. User selects (or types) a city.
+7. App shows a loading state while calling `/api/nearby-clinics`.
+8. Nearby clinic/hospital cards appear (or a friendly empty-state message).
+9. User may click "Check another symptom" to reset the form and start over.
+
+There is no multi-page navigation — everything happens on one scrolling
+page, with sections revealing progressively as the user completes each
+step. This matches the PRD's decision to exclude accounts, history, and
+multi-screen complexity from v1.0.
+
+## 2. Screen Sections (in order of appearance)
+
+| Section | Visible by default? | Appears when |
+|---|---|---|
+| Header (title + tagline) | Yes | Always |
+| Symptom input + submit button | Yes | Always |
+| Loading indicator | No | While an API call is in flight |
+| Emergency warning banner | No | `isEmergency === true` |
+| Specialist/condition results | No | `isEmergency === false` |
+| City selector | No | After a non-emergency result is shown |
+| Clinic results / empty state | No | After a city is selected |
+| "Check another symptom" button | No | After any result is shown |
+| Disclaimer footer | Yes | Always (persistent) |
+
+## 3. Low-Fidelity Wireframe (Homepage)
+
+```
++-----------------------------------------------------+
+|  SymptomCare                                          |
+|  Know which doctor to see, instantly                  |
+|                                                         |
+|  +-------------------------------------------------+  |
+|  | Describe your symptoms...                        |  |
+|  |  [                                             ]  |  |
+|  +-------------------------------------------------+  |
+|  [        Check symptoms        ]                      |
+|                                                         |
+|  (conditional) EMERGENCY WARNING BANNER                |
+|  This may be an emergency — seek immediate help.        |
+|                                                         |
+|  (conditional) RESULTS                                  |
+|  Specialist: General Physician                          |
+|  Possible condition: Viral fever                         |
+|  This is not a medical diagnosis...                       |
+|                                                         |
+|  Select city:  [ Delhi          v ]                    |
+|                                                         |
+|  Nearby clinics/hospitals:                               |
+|  +-----------------+  +-----------------+               |
+|  | Clinic name      |  | Clinic name      |               |
+|  | Address          |  | Address          |               |
+|  | Rating: 4.3       |  | Rating: 4.0       |               |
+|  +-----------------+  +-----------------+               |
+|                                                         |
+|  [   Check another symptom   ]                          |
+|                                                         |
+|  -----------------------------------------------------  |
+|  Not a substitute for professional medical advice.       |
+|  In an emergency, contact local emergency services.       |
++-----------------------------------------------------+
+```
+
+## 4. Navigation
+
+None. Single scrolling page, no routing, no menu. This is intentional —
+it removes an entire category of complexity (routing, page state,
+back-button handling) that a beginner does not need for this scope.
+
+## 5. Every Screen Exists For a Reason
+
+| Element | Reason it exists |
+|---|---|
+| Symptom input | Core input — the entire product starts here |
+| Loading indicator | Prevents user confusion during API calls |
+| Emergency banner | Directly serves the PRD's responsible-use requirement |
+| Specialist/condition results | Core output — the main value delivered |
+| City selector | Required input for the second core feature (clinic search) |
+| Clinic cards | Core output — the second core value delivered |
+| Reset button | Lets users repeat the flow without reloading the page |
+| Disclaimer footer | Required by PRD Section 11 — always visible |
+
+No login screen, no settings screen, no history screen — all correctly
+excluded per the approved v1.0 scope.

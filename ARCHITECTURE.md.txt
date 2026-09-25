@@ -1,0 +1,94 @@
+# SymptomCare — Architecture
+
+## 1. Tech Stack
+
+| Layer | Choice | Why |
+|---|---|---|
+| Frontend | HTML, CSS, JavaScript (no framework) | Simplest possible for a beginner; no build tooling |
+| Hosting | Vercel (free tier) | GitHub-connected auto-deploy; free serverless functions |
+| Backend logic | Vercel Serverless Functions (Node.js) | Keeps API keys off the client; scales automatically |
+| Database | None | No accounts/history in v1.0 — see Section 3 justification |
+| Authentication | None | Explicitly out of scope in PRD |
+| AI | Claude API (Anthropic) | Symptom interpretation → specialist/condition/emergency |
+| Location data | Google Places API (Text Search) | Real nearby clinic/hospital results |
+| Version control | Git + GitHub | Standard, free, already set up |
+
+## 2. Component Diagram
+
+```
+User's Browser
+      |
+      v
++-------------------------------------------+
+| Vercel                                     |
+|                                             |
+|  Static Frontend        /api/analyze-      |
+|  (index.html,           symptoms  ---->  Claude API
+|  style.css, script.js)                     |
+|         |                                   |
+|         '------->  /api/nearby-clinics ---> Google Places API
++-------------------------------------------+
+```
+
+The frontend never calls Claude or Google Places directly. Every external
+call is proxied through a Vercel serverless function so API keys stay
+server-side (stored as Vercel Environment Variables) and are never exposed
+in browser-visible code.
+
+## 3. Request Lifecycle — Symptom Check
+
+1. User types symptoms into the textarea and clicks "Check symptoms".
+2. Frontend sends `POST /api/analyze-symptoms` with `{ symptomText }`.
+3. The serverless function calls the Claude API with a strict system prompt
+   requiring JSON-only output.
+4. Claude returns: `specialist`, `possibleCondition`, `isEmergency`,
+   `emergencyMessage`, `disclaimer`.
+5. The function forwards this JSON back to the frontend.
+6. Frontend branches:
+   - `isEmergency === true` → show the emergency banner with `emergencyMessage`.
+   - `isEmergency === false` → show specialist + possibleCondition + disclaimer.
+7. User selects a city from a dropdown.
+8. Frontend sends `GET /api/nearby-clinics?city={city}`.
+9. The serverless function calls Google Places Text Search for
+   `"clinics and hospitals in {city}"`.
+10. Function returns a simplified list (name, address, rating, mapsUrl),
+    capped at 8 results.
+11. Frontend renders clinic cards.
+
+## 4. AI Interaction Details
+
+- **Model:** Claude (Anthropic API)
+- **Input:** raw symptom text (Hindi or English), sent as-is
+- **System prompt constraints:**
+  - Respond ONLY in valid JSON, no extra text
+  - Never provide a definitive diagnosis — suggestion only
+  - Always include a disclaimer string
+  - Flag `isEmergency: true` conservatively for symptoms suggesting urgent
+    conditions (e.g., chest pain, difficulty breathing, severe bleeding)
+- **Output contract:**
+  ```json
+  {
+    "specialist": "Cardiologist",
+    "possibleCondition": "Possible anxiety or cardiac issue",
+    "isEmergency": true,
+    "emergencyMessage": "These symptoms may indicate a medical emergency. Please seek immediate care or call your local emergency number.",
+    "disclaimer": "This is not a medical diagnosis. Please consult a qualified doctor."
+  }
+  ```
+
+## 5. External Services
+
+| Service | Purpose | Auth | Cost |
+|---|---|---|---|
+| Anthropic Claude API | Symptom interpretation | API key (env var) | Pay-as-you-go, low volume for a demo |
+| Google Places API | Nearby clinic search | API key (env var, restricted to Places API) | Free tier sufficient for demo use |
+| Vercel | Hosting + serverless functions | GitHub OAuth | Free (Hobby tier) |
+
+## 6. Security Notes
+
+- No API keys in frontend code or Git history — only in Vercel Environment
+  Variables.
+- No PII is collected or stored (no accounts, no logging of symptom text
+  beyond the request lifecycle).
+- All endpoints validate input before calling external APIs, to avoid
+  wasting API quota on empty/invalid requests.

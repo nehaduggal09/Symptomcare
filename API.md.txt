@@ -1,0 +1,123 @@
+# SymptomCare — API Design (v1.0)
+
+All endpoints are Vercel Serverless Functions under `/api`. No
+authentication is required for any endpoint (v1.0 has no user accounts).
+No implementation code is included here — design only, per Day 2 scope.
+
+---
+
+## 1. `POST /api/analyze-symptoms`
+
+**Purpose:** Interpret free-text symptoms and return a suggested
+specialist, a possible condition, and an emergency flag.
+
+### Request
+```
+POST /api/analyze-symptoms
+Content-Type: application/json
+
+{
+  "symptomText": "mujhe teen din se bukhar aur sar dard hai"
+}
+```
+
+### Validation
+- `symptomText` is required, must be a non-empty string after trimming.
+- Max length: 1000 characters.
+- Reject requests with only whitespace or non-text content.
+
+### Authentication
+- None. Public endpoint. Relies on Vercel's default abuse protections.
+
+### Response — 200 OK
+```json
+{
+  "specialist": "General Physician",
+  "possibleCondition": "Possible viral fever",
+  "isEmergency": false,
+  "emergencyMessage": null,
+  "disclaimer": "This is not a medical diagnosis. Please consult a qualified doctor."
+}
+```
+
+### Response — 200 OK (emergency case)
+```json
+{
+  "specialist": "Emergency / Cardiologist",
+  "possibleCondition": "Possible cardiac event",
+  "isEmergency": true,
+  "emergencyMessage": "These symptoms may indicate a medical emergency. Please seek immediate medical help or contact your local emergency number.",
+  "disclaimer": "This is not a medical diagnosis. Please consult a qualified doctor."
+}
+```
+
+### Error Cases
+| Status | Condition | Response body |
+|---|---|---|
+| 400 | Missing/empty `symptomText` | `{ "error": "Please describe your symptoms before submitting." }` |
+| 400 | `symptomText` exceeds 1000 characters | `{ "error": "Please shorten your description (max 1000 characters)." }` |
+| 500 | Claude API call fails or returns invalid JSON | `{ "error": "Something went wrong analyzing your symptoms. Please try again." }` |
+
+---
+
+## 2. `GET /api/nearby-clinics`
+
+**Purpose:** Return nearby clinics/hospitals for a given city using
+Google Places.
+
+### Request
+```
+GET /api/nearby-clinics?city=Delhi
+```
+
+### Validation
+- `city` query parameter is required, must be a non-empty string.
+- Max length: 100 characters.
+
+### Authentication
+- None. Public endpoint.
+
+### Response — 200 OK
+```json
+{
+  "results": [
+    {
+      "name": "City Care Clinic",
+      "address": "123 MG Road, Delhi",
+      "rating": 4.3,
+      "mapsUrl": "https://www.google.com/maps/place/?q=place_id:XXXX"
+    },
+    {
+      "name": "Sunrise Hospital",
+      "address": "45 Ring Road, Delhi",
+      "rating": 4.0,
+      "mapsUrl": "https://www.google.com/maps/place/?q=place_id:YYYY"
+    }
+  ]
+}
+```
+Maximum 8 results returned. `rating` may be `null` if unavailable.
+
+### Response — 200 OK (no results)
+```json
+{ "results": [] }
+```
+An empty list is a valid, non-error response — the frontend shows a
+friendly empty-state message, not an error.
+
+### Error Cases
+| Status | Condition | Response body |
+|---|---|---|
+| 400 | Missing/empty `city` | `{ "error": "Please select or enter a city." }` |
+| 500 | Google Places API call fails | `{ "error": "Couldn't load nearby clinics right now. Please try again." }` |
+
+---
+
+## Shared Conventions
+
+- All responses are `Content-Type: application/json`.
+- All error responses follow `{ "error": string }`.
+- No endpoint ever returns raw stack traces or provider error details to
+  the client — internal errors are logged server-side (Vercel logs) and a
+  generic friendly message is returned.
+- CORS: not required (frontend and API share the same origin on Vercel).

@@ -1,0 +1,85 @@
+# SymptomCare — Project Structure
+
+```
+symptomcare/
+├── index.html
+├── style.css
+├── script.js
+├── api/
+│   ├── analyze-symptoms.js
+│   └── nearby-clinics.js
+├── data/
+│   └── cities.json
+├── demo-assets/
+├── docs/
+│   ├── SymptomCare_PRD.docx
+│   ├── SymptomCare_Blueprint_Day2-10.docx
+│   ├── SymptomCare_Pitch_Deck.pptx
+│   ├── ARCHITECTURE.md
+│   ├── SCHEMA.md
+│   ├── API.md
+│   ├── UI-WIREFRAMES.md
+│   └── PROJECT-STRUCTURE.md
+├── .gitignore
+├── .env               (local only — never committed)
+├── README.md
+└── package.json       (added Day 2, if needed for the Anthropic SDK)
+```
+
+## Folder Responsibilities
+
+**`index.html`** — the single page containing every UI section described
+in `UI-WIREFRAMES.md`. No other HTML files are needed (single-page app,
+no routing).
+
+**`style.css`** — all styling for the app. Mobile-first, single file, no
+CSS framework. Keeps the beginner-friendly "no build step" approach.
+
+**`script.js`** — all client-side logic: form handling, `fetch()` calls
+to the two API endpoints, show/hide logic for conditional sections
+(emergency banner, results, clinic list), and the reset button.
+
+**`api/`** — Vercel Serverless Functions. Each file here automatically
+becomes a live endpoint at `/api/<filename-without-extension>`. This is
+where all secret API keys are used (via `process.env`), never in
+frontend code.
+- `analyze-symptoms.js` → calls Claude API
+- `nearby-clinics.js` → calls Google Places API
+
+**`data/cities.json`** — the one static data file the app needs (see
+`SCHEMA.md` for why no real database is used). Read by the frontend to
+populate the city selector.
+
+**`demo-assets/`** — screenshots and any screen recording captured on
+Day 9 for the presentation. Not part of the deployed site; excluded from
+the live build but kept in the repo for evidence of testing/QA.
+
+**`docs/`** — every planning and design document produced on Day 1 and
+Day 2. This is the living source of truth for the whole build — any
+fresh AI conversation on a later day can be pointed here for full
+context.
+
+**`.gitignore`** — excludes `node_modules/` and `.env` from version
+control, so secrets are never pushed to GitHub.
+
+**`.env`** — local-only file holding `ANTHROPIC_API_KEY` and
+`GOOGLE_PLACES_API_KEY` for local testing (e.g., with `vercel dev`).
+Never committed. The real values for production live only in Vercel's
+Environment Variables dashboard.
+
+**`README.md`** — project overview, live link, tech stack, and links to
+the docs — the first thing anyone (judge, recruiter, collaborator) sees.
+
+## Why This Structure
+
+- **Flat, not deeply nested** — a beginner can find any file within one
+  or two clicks, no hunting through `src/components/features/...` layers.
+- **`api/` matches Vercel's convention exactly** — zero configuration
+  needed to turn a file into a live serverless endpoint.
+- **One file per responsibility** — `index.html`, `style.css`,
+  `script.js` are each singular and complete, avoiding the complexity of
+  splitting into many small component files (unnecessary for this
+  project's size and the beginner's comfort level).
+- **`docs/` centralizes all planning artifacts**, so every future day's
+  fresh AI conversation has one place to point to for full context —
+  directly supporting the "no re-planning" goal of this capstone.
