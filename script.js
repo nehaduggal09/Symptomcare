@@ -1,35 +1,80 @@
-// Day 3: static show/hide logic only — no real API calls yet (that's Day 4 & 5)
+// Day 4: Real Gemini API integration for symptom analysis
+// Nearby clinics section still uses placeholder logic (built on Day 5)
 
 const submitBtn = document.getElementById("submitBtn");
 const symptomInput = document.getElementById("symptomInput");
 const loadingText = document.getElementById("loadingText");
 const emergencyBanner = document.getElementById("emergencyBanner");
+const emergencyMessage = document.getElementById("emergencyMessage");
 const resultsBlock = document.getElementById("resultsBlock");
+const specialistText = document.getElementById("specialistText");
+const conditionText = document.getElementById("conditionText");
+const disclaimerText = document.getElementById("disclaimerText");
 const citySection = document.getElementById("citySection");
 const findClinicsBtn = document.getElementById("findClinicsBtn");
+const clinicsLoading = document.getElementById("clinicsLoading");
 const clinicsSection = document.getElementById("clinicsSection");
 const resetBtn = document.getElementById("resetBtn");
 
-submitBtn.addEventListener("click", () => {
-  if (!symptomInput.value.trim()) {
+function hideAllResultSections() {
+  emergencyBanner.classList.add("hidden");
+  resultsBlock.classList.add("hidden");
+  citySection.classList.add("hidden");
+  clinicsSection.classList.add("hidden");
+  resetBtn.classList.add("hidden");
+}
+
+submitBtn.addEventListener("click", async () => {
+  const text = symptomInput.value.trim();
+
+  if (!text) {
     alert("Please describe your symptoms first.");
     return;
   }
 
+  hideAllResultSections();
   loadingText.classList.remove("hidden");
+  submitBtn.disabled = true;
 
-  // Placeholder: simulate a short delay, then show dummy results
-  setTimeout(() => {
+  try {
+    const response = await fetch("/api/analyze-symptoms", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ symptomText: text }),
+    });
+
+    const data = await response.json();
+
     loadingText.classList.add("hidden");
-    resultsBlock.classList.remove("hidden");
+    submitBtn.disabled = false;
+
+    if (!response.ok) {
+      alert(data.error || "Something went wrong. Please try again.");
+      return;
+    }
+
+    if (data.isEmergency) {
+      emergencyMessage.textContent = data.emergencyMessage;
+      emergencyBanner.classList.remove("hidden");
+    } else {
+      specialistText.textContent = data.specialist;
+      conditionText.textContent = data.possibleCondition;
+      disclaimerText.textContent = data.disclaimer;
+      resultsBlock.classList.remove("hidden");
+    }
+
     citySection.classList.remove("hidden");
     resetBtn.classList.remove("hidden");
-    // emergencyBanner.classList.remove("hidden"); // toggle this manually to preview emergency style
-  }, 600);
+  } catch (err) {
+    console.error("Request failed:", err);
+    loadingText.classList.add("hidden");
+    submitBtn.disabled = false;
+    alert("Couldn't reach the server. Please check your connection and try again.");
+  }
 });
 
+// Day 5 will replace this with a real Google Places API call
 findClinicsBtn.addEventListener("click", () => {
-  const clinicsLoading = document.getElementById("clinicsLoading");
   clinicsLoading.classList.remove("hidden");
 
   setTimeout(() => {
@@ -40,9 +85,5 @@ findClinicsBtn.addEventListener("click", () => {
 
 resetBtn.addEventListener("click", () => {
   symptomInput.value = "";
-  resultsBlock.classList.add("hidden");
-  emergencyBanner.classList.add("hidden");
-  citySection.classList.add("hidden");
-  clinicsSection.classList.add("hidden");
-  resetBtn.classList.add("hidden");
+  hideAllResultSections();
 });
