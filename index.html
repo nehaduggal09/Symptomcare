@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SymptomCare — Know which doctor to see, instantly</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="app-header">
+    <h1>SymptomCare</h1>
+    <p class="tagline">Know which doctor to see, instantly.</p>
+  </header>
+
+  <main>
+    <!-- Symptom Input -->
+    <section class="card">
+      <label for="symptomInput">Describe your symptoms (Hindi or English)</label>
+      <textarea id="symptomInput" placeholder="e.g. mujhe teen din se bukhar aur sar dard hai"></textarea>
+      <button id="submitBtn">Check symptoms</button>
+      <p id="loadingText" class="loading hidden">Analyzing your symptoms...</p>
+    </section>
+
+    <!-- Emergency Banner (hidden by default) -->
+    <section id="emergencyBanner" class="banner emergency hidden">
+      <strong>⚠ This may be an emergency</strong>
+      <p id="emergencyMessage">Placeholder emergency message.</p>
+    </section>
+
+    <!-- Results (hidden by default) -->
+    <section id="resultsBlock" class="card hidden">
+      <p><strong>Suggested specialist:</strong> <span id="specialistText">Placeholder</span></p>
+      <p><strong>Possible condition:</strong> <span id="conditionText">Placeholder</span></p>
+      <p class="disclaimer" id="disclaimerText">This is not a medical diagnosis. Please consult a qualified doctor.</p>
+    </section>
+
+    <!-- City Selector (hidden by default) -->
+    <section id="citySection" class="card hidden">
+      <label for="citySelect">Select your city</label>
+      <select id="citySelect">
+        <option value="">-- Choose a city --</option>
+        <option value="Delhi">Delhi</option>
+        <option value="Mumbai">Mumbai</option>
+        <option value="Bengaluru">Bengaluru</option>
+        <option value="Chennai">Chennai</option>
+        <option value="Kolkata">Kolkata</option>
+        <option value="Hyderabad">Hyderabad</option>
+        <option value="Pune">Pune</option>
+        <option value="Ahmedabad">Ahmedabad</option>
+      </select>
+      <button id="findClinicsBtn">Find nearby clinics</button>
+      <p id="clinicsLoading" class="loading hidden">Searching nearby clinics...</p>
+    </section>
+
+    <!-- Clinics List (hidden by default) -->
+    <section id="clinicsSection" class="hidden">
+      <h2>Nearby Clinics &amp; Hospitals</h2>
+      <div id="clinicsList" class="clinics-grid">
+        <!-- Placeholder cards -->
+        <div class="clinic-card">
+          <h3>Sample Clinic Name</h3>
+          <p>123 Sample Road, City</p>
+          <p>⭐ 4.3</p>
+          <a href="#" target="_blank">View on Map</a>
+        </div>
+        <div class="clinic-card">
+          <h3>Sample Hospital Name</h3>
+          <p>45 Sample Street, City</p>
+          <p>⭐ 4.0</p>
+          <a href="#" target="_blank">View on Map</a>
+        </div>
+      </div>
+      <p id="clinicsEmpty" class="hidden">No clinics found for this city — try a nearby major city.</p>
+    </section>
+
+    <button id="resetBtn" class="hidden">Check another symptom</button>
+  </main>
+
+  <footer class="disclaimer-footer">
+    SymptomCare does not provide medical diagnosis. It offers general guidance only.
+    Always consult a qualified doctor. If you are experiencing a medical emergency,
+    contact your local emergency services immediately.
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
